@@ -1,0 +1,44 @@
+/*
+  ==============================================================================
+
+    This file contains the basic framework code for a JUCE plugin editor.
+
+  ==============================================================================
+*/
+
+#include "PluginProcessor.h"
+#include "PluginEditor.h"
+
+//==============================================================================
+DiffusorXAudioProcessorEditor::DiffusorXAudioProcessorEditor (DiffusorXAudioProcessor& p)
+    : AudioProcessorEditor (&p), audioProcessor (p)
+{
+    // Make sure that before the constructor has finished, you've set the
+    // editor's size to whatever you need it to be.
+    visage_host_ =  std::make_unique<VisageHostComponent>();
+    addAndMakeVisible(visage_host_.get());
+    setSize (700, 400);
+}
+
+DiffusorXAudioProcessorEditor::~DiffusorXAudioProcessorEditor()
+{
+}
+
+
+//==============================================================================
+void DiffusorXAudioProcessorEditor::paint (juce::Graphics& g)
+{
+    // (Our component is opaque, so we must completely fill the background with a solid colour)
+    g.fillAll (getLookAndFeel().findColour (juce::ResizableWindow::backgroundColourId));
+
+    g.setColour (juce::Colours::white);
+    g.setFont (juce::FontOptions (15.0f));
+    g.drawFittedText ("Hello Wovkjvkkrld!", getLocalBounds(), juce::Justification::centred, 1);
+}
+
+void DiffusorXAudioProcessorEditor::resized()
+{
+    // This is generally where you'll want to lay out the positions of any
+    // subcomponents in your editor..
+    visage_host_->setBounds(getLocalBounds());
+}
