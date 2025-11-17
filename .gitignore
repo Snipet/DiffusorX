@@ -1,1 +1,8 @@
 /build
+/JuceLibraryCode
+/.vscode
+/.idea
+/.vs
+/*.user
+*.env
+*.log
