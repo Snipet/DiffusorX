@@ -9,6 +9,7 @@
 #pragma once
 
 #include <JuceHeader.h>
+#include "dsp/freq_analyzer.h"
 
 //==============================================================================
 /**
@@ -52,8 +53,16 @@ public:
     //==============================================================================
     void getStateInformation (juce::MemoryBlock& destData) override;
     void setStateInformation (const void* data, int sizeInBytes) override;
+    juce::AudioProcessorValueTreeState& getAPVTS() { return apvts; }
+
+    float* getFreqAnalyzerData() const {return freq_analyzer->getMagnitudeSpectrum();}
+    FreqAnalyzer* getFreqAnalyzer() const {return freq_analyzer;}
 
 private:
+    juce::AudioProcessorValueTreeState apvts;
+    FreqAnalyzer* freq_analyzer = nullptr;
+    float* mono_buffer = nullptr;
+    static juce::AudioProcessorValueTreeState::ParameterLayout createParameterLayout();
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (DiffusorXAudioProcessor)
 };

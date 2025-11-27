@@ -1,4 +1,4 @@
-$input v_coordinates, v_dimensions, v_shader_values, v_position, v_gradient_pos, v_gradient_color_pos
+$input v_coordinates, v_dimensions, v_shader_values, v_position, v_gradient_pos, v_gradient_pos2, v_gradient_texture_pos
 
 #include <shader_include.sh>
 
@@ -59,26 +59,25 @@ float smoothgrad(float d, float pos){
   
 }
 
-float randomval(vec2 p){
-  float dotp = p.x * 12.9898 + p.y * 78.233;
-  float sin_val = sin(dotp) * 43758.5453;
-  return sin_val - floor(sin_val);
-}
-
 void main() {
   const float body_radius = 0.8;
-  const float ring_width = 0.02;
+  const float ring_width = 0.025;
   const float ring_radius = 0.8 + ring_width;
-  const float noise = 0.04;
+  vec2 gradient_pos = gradient(s_gradient, v_gradient_texture_pos, v_gradient_pos, v_gradient_pos2, v_position);
+  vec4 input_values = gradient(s_gradient, v_gradient_texture_pos, v_gradient_pos, v_gradient_pos2, v_position);
+  // float knob_value = 0.5;
+  float knob_value = input_values.z;
 
   float d = length(v_coordinates);
   float body_mask = 1.0 - smoothy(d, 50.0, body_radius);
-  float grad = (1.0 - clamp(smoothgrad(d, body_radius), 0.0, 1.0)) * 0.3 + 0.1;
+  float grad = (1.0 - clamp(smoothgrad(d, body_radius), 0.0, 1.0)) * 0.2 + 0.07;
   float body_grad = grad * body_mask;
   
-  vec4 body = vec4(body_grad, body_grad, body_grad, body_mask) + randomval(v_coordinates) * noise;
+  vec4 body = vec4(body_grad, body_grad, body_grad, body_mask);
 
-  float ring_mask = smoothring(d, 200.0, ring_radius, ring_width);
+  float ring_mask = smoothring(d, 200.0, ring_radius, ring_width * (1.0 + input_values.g * 0.9));
+  float ypos = (v_coordinates.y + ring_radius + ring_width * 3.0) / (2.0 * (ring_radius + ring_width * 3.0));
+  ring_mask = ring_mask * smoothy(ypos, 50.0, 1.0 - knob_value);
   vec4 ring = vec4(0.13, 0.67, 1.0, ring_mask);
   vec4 outside_decay = vec4(0.0, 0.0, 0.0, 1.0);
   float outside_decay_mask = smoothring(d, 200.0, ring_radius + 0.08, 0.08);

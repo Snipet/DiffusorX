@@ -15,9 +15,12 @@ DiffusorXAudioProcessorEditor::DiffusorXAudioProcessorEditor (DiffusorXAudioProc
 {
     // Make sure that before the constructor has finished, you've set the
     // editor's size to whatever you need it to be.
-    visage_host_ =  std::make_unique<VisageHostComponent>();
+
+
+    visage_host_ =  std::make_unique<VisageHostComponent>(p);
     addAndMakeVisible(visage_host_.get());
     setSize (700, 400);
+    
 }
 
 DiffusorXAudioProcessorEditor::~DiffusorXAudioProcessorEditor()

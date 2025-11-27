@@ -9,8 +9,11 @@
 # information can be found in the CMake docs.
 
 cmake_minimum_required(VERSION 3.22)
-set(CMAKE_CXX_STANDARD 17)
+
+# Set C++ standard
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
 
 # The top-level CMakeLists.txt file for a project must contain a literal, direct call to the
 # `project()` command. `project()` sets up some helpful variables that describe source/binary
@@ -27,6 +30,12 @@ project(DIFFUSORX VERSION 0.0.1)
 # or
 add_subdirectory(third_party/JUCE)                    # If you've put JUCE in a subdirectory called JUCE
 add_subdirectory(third_party/visage)
+add_subdirectory(third_party/json)
+
+set(KISSFFT_TEST OFF CACHE BOOL "Build KissFFT tests" FORCE)
+set(KISSFFT_TOOLS OFF CACHE BOOL "Build KissFFT tools" FORCE)
+set(KISSFFT_STATIC ON CACHE BOOL "Build KissFFT as a static library" FORCE)
+add_subdirectory(third_party/kissfft)
 include_directories(
     third_party/visage/visage_app
     third_party/visage/visage_file_embed
@@ -36,9 +45,12 @@ include_directories(
     third_party/visage/visage_widgets
     third_party/visage/visage_windowing
     third_party/visage
+    third_party/kissfft
+    Source
     )
 
 file(GLOB_RECURSE EXAMPLE_SHADERS shaders/[vf]s_*.sc)
+file(GLOB_RECURSE FONT_TTF_FILES fonts/*.ttf)
 
 # Print all shader files to be embedded
 message(STATUS "Embedding shader files:")
@@ -46,8 +58,11 @@ foreach(SHADER_FILE ${EXAMPLE_SHADERS})
     message(STATUS "  - ${SHADER_FILE}")
 endforeach()
 
+add_definitions(-w)
+
 add_compile_definitions(SHADERS_FOLDER=\"${CMAKE_CURRENT_SOURCE_DIR}/shaders\")
 visage_embed_shaders(EmbeddedShaderResources "plugin_shaders.h" "resources::shaders" "${EXAMPLE_SHADERS}")
+add_embedded_resources(EmbeddedFontResources "plugin_fonts.h" "resources::fonts" "${FONT_TTF_FILES}")
 
 # If you are building a VST2 or AAX plugin, CMake needs to be told where to find these SDKs on your
 # system. This setup should be done before calling `juce_add_plugin`.
@@ -94,7 +109,13 @@ juce_generate_juce_header(DiffusorX)
 target_sources(DiffusorX
     PRIVATE
         Source/PluginEditor.cpp
-        Source/PluginProcessor.cpp)
+        Source/PluginProcessor.cpp
+        Source/gui/visualizer.cpp
+        Source/gui/knob.cpp
+        Source/gui/plugin.cpp
+        Source/gui/knob_container.cpp
+        Source/dsp/freq_analyzer.cpp
+        )
 
 # `target_compile_definitions` adds some preprocessor definitions to our target. In a Projucer
 # project, these might be passed in the 'Preprocessor Definitions' field. JUCE modules also make use
@@ -130,7 +151,10 @@ target_link_libraries(DiffusorX
         # AudioPluginData           # If we'd created a binary data target, we'd link to it here
         juce::juce_audio_utils
         visage
+        kissfft
+        nlohmann_json::nlohmann_json
         EmbeddedShaderResources
+        EmbeddedFontResources
 
     PUBLIC
         juce::juce_recommended_config_flags

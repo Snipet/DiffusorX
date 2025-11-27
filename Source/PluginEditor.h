@@ -13,6 +13,7 @@
 #include "visage_windowing/windowing.h"
 #include "visage_app/application_window.h"
 #include <cassert>
+#include "gui/plugin.h"
 
 //==============================================================================
 /**
@@ -34,9 +35,10 @@ private:
 
     class VisageHostComponent : public juce::Component {
     public:
-        VisageHostComponent(){
+        VisageHostComponent(DiffusorXAudioProcessor& p) : audio_processor(p) {
             setOpaque(true);
             m_flogger = juce::FileLogger::createDefaultAppLogger("DiffusorXLogs", "DiffusorXLog.txt", "DiffusorX Log Started");
+            // Add plugin frame 
         }
         ~VisageHostComponent() override {
             // Shut down visage
@@ -84,11 +86,19 @@ private:
                         canvas.circle(x, y, 2.f * circle_radius);
 
                     };
+
+                    app_->onResize() = [this]() {
+                        plugin_frame_->setBounds(0, 0, app_->width(), app_->height());
+                    };
                     const float width = getWidth();
                     const float height = getHeight();
                     float scale = 1.f;
                     const float dpi_scale = peer->getPlatformScaleFactor();
                     m_flogger->logMessage("VisageHostConmponent initilizeIfReady with width: " + juce::String(width) + " height: " + juce::String(height) + " scale: " + juce::String(scale) + " dpi_scale: " + juce::String(dpi_scale));
+
+
+                    plugin_frame_ = std::make_unique<PluginUIFrame>(audio_processor);
+                    app_->addChild(plugin_frame_.get());
                     app_->show(visage::Dimension::nativePixels(width), visage::Dimension::nativePixels(height), nativeHandle);
 
                     
@@ -98,7 +108,9 @@ private:
 
     private:
         std::unique_ptr<visage::ApplicationWindow> app_;
+        std::unique_ptr<PluginUIFrame> plugin_frame_;
         FileLogger* m_flogger;
+        DiffusorXAudioProcessor& audio_processor;
 
     };
 

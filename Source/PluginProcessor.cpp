@@ -19,19 +19,73 @@ DiffusorXAudioProcessor::DiffusorXAudioProcessor()
                       #endif
                        .withOutput ("Output", juce::AudioChannelSet::stereo(), true)
                      #endif
-                       )
+                       ),
+                       apvts(*this, nullptr, "Parameters", createParameterLayout())
 #endif
 {
+    freq_analyzer = new FreqAnalyzer(2048);
+    mono_buffer = nullptr;
+}
+
+juce::AudioProcessorValueTreeState::ParameterLayout DiffusorXAudioProcessor::createParameterLayout()
+{
+    juce::AudioProcessorValueTreeState::ParameterLayout layout;
+    
+    // 1) Frequency - logarithmic scale
+    layout.add(std::make_unique<juce::AudioParameterFloat>(
+        "frequency",
+        "Frequency",
+        juce::NormalisableRange<float>(
+            20.0f,                    // min
+            22050.0f,                 // max
+            0.01f,                    // step
+            0.3f),                    // skew factor for logarithmic (< 1.0 = log scale)
+        1000.0f,                      // default value
+        "Hz",
+        juce::AudioProcessorParameter::genericParameter,
+        [](float value, int) { return juce::String(value, 1) + " Hz"; },
+        [](const juce::String& text) { 
+            return text.trimEnd().upToFirstOccurrenceOf(" ", false, false).getFloatValue();
+        }
+    ));
+    
+    // 2) Resonance - linear scale, no label
+    layout.add(std::make_unique<juce::AudioParameterFloat>(
+        "resonance",
+        "Resonance",
+        juce::NormalisableRange<float>(0.0f, 1.0f, 0.001f),
+        0.5f                          // default value
+    ));
+    
+    // 3) Diffuse Stages - integer parameter, linear scale
+    layout.add(std::make_unique<juce::AudioParameterInt>(
+        "diffuse_stages",
+        "Diffuse Stages",
+        1,                            // min
+        100,                          // max
+        10                            // default value
+    ));
+    
+    // 4) Bypass - boolean parameter
+    layout.add(std::make_unique<juce::AudioParameterBool>(
+        "bypass",
+        "Bypass",
+        false                         // default value (not bypassed)
+    ));
+    
+    return layout;
 }
 
 DiffusorXAudioProcessor::~DiffusorXAudioProcessor()
 {
+    delete freq_analyzer;
+    delete[] mono_buffer;
 }
 
 //==============================================================================
 const juce::String DiffusorXAudioProcessor::getName() const
 {
-    return JucePlugin_Name;
+    return "DiffusorX";
 }
 
 bool DiffusorXAudioProcessor::acceptsMidi() const
@@ -95,6 +149,12 @@ void DiffusorXAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBl
 {
     // Use this method as the place to do any pre-playback
     // initialisation that you need..
+    if(mono_buffer != nullptr)
+    {
+        delete[] mono_buffer;
+    }
+
+    mono_buffer = new float[samplesPerBlock];
 }
 
 void DiffusorXAudioProcessor::releaseResources()
@@ -150,9 +210,24 @@ void DiffusorXAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, ju
     // the samples and the outer loop is handling the channels.
     // Alternatively, you can process the samples with the channels
     // interleaved by keeping the same state.
+    float mono_scale = 1.f / static_cast<float> (totalNumInputChannels);
+    memset(mono_buffer, 0, sizeof(float) * buffer.getNumSamples());
+    for (int channel = 0; channel < totalNumInputChannels; ++channel){
+        auto* channelData = buffer.getReadPointer (channel);
+        for (int sample = 0; sample < buffer.getNumSamples(); ++sample)
+        {
+            mono_buffer[sample] += channelData[sample] * mono_scale;
+        }
+    }
+
+    // Process the mono buffer with the frequency analyzer
+    freq_analyzer->processBlock(mono_buffer, buffer.getNumSamples());
+
+
     for (int channel = 0; channel < totalNumInputChannels; ++channel)
     {
         auto* channelData = buffer.getWritePointer (channel);
+
 
         // ..do something to the data...
     }
