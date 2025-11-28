@@ -14,12 +14,21 @@ public:
     void resized() override;
 
 private:
-    std::unique_ptr<VisualizerFrame> visualizer_frame_;
+    // Container frames
     std::unique_ptr<visage::Frame> visualizer_frame_container;
     std::unique_ptr<visage::Frame> parameter_frame_container;
     std::unique_ptr<visage::Frame> main_knobs_container;
+
+    // Content frames
+    std::unique_ptr<VisualizerFrame> visualizer_frame_;
+
+    // Knobs
     std::unique_ptr<KnobContainer<juce::AudioParameterFloat>> diffuse_freq_knob;
     std::unique_ptr<KnobContainer<juce::AudioParameterInt>> diffuse_stages_knob;
     std::unique_ptr<KnobContainer<juce::AudioParameterFloat>> diffuse_reso_knob;
+
+    // Shaders
+    visage::Shader knob_background_shader;
+
     DiffusorXAudioProcessor& audio_processor;
 };

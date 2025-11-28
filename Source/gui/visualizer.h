@@ -12,11 +12,15 @@ public:
 private:
     visage::GraphData freq_graph_data;
     visage::GraphData allpass_graph_data;
+    double* temp_allpass_graph_data = nullptr;
     DiffusorXAudioProcessor& audio_processor;
     float max_magnitude;
+    double max_val;
+    double min_val;
 
     void calculateFreqGraphData();
     void calculateAllpassGraphData();
+    void calculateGroupDelayData();
 
     float linearToLogFrequency(float normalizedValue, float minFreq, float maxFreq)
     {

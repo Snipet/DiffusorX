@@ -53,7 +53,7 @@ juce::AudioProcessorValueTreeState::ParameterLayout DiffusorXAudioProcessor::cre
     layout.add(std::make_unique<juce::AudioParameterFloat>(
         "resonance",
         "Resonance",
-        juce::NormalisableRange<float>(0.0f, 1.0f, 0.001f),
+        juce::NormalisableRange<float>(0.01f, 1.0f, 0.01f, 0.75f),
         0.5f                          // default value
     ));
     

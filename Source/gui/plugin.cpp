@@ -1,6 +1,9 @@
 #include "plugin.h"
+#include "embedded/plugin_shaders.h"
 
-PluginUIFrame::PluginUIFrame(DiffusorXAudioProcessor& p) : audio_processor(p) {
+PluginUIFrame::PluginUIFrame(DiffusorXAudioProcessor& p) : audio_processor(p),
+                knob_background_shader(resources::shaders::vs_shader_quad, resources::shaders::fs_knobs_background, visage::BlendMode::Alpha)
+{
     visualizer_frame_ = std::make_unique<VisualizerFrame>(audio_processor);
     visualizer_frame_container = std::make_unique<visage::Frame>();
     parameter_frame_container = std::make_unique<visage::Frame>();
@@ -17,6 +20,7 @@ PluginUIFrame::PluginUIFrame(DiffusorXAudioProcessor& p) : audio_processor(p) {
     //this->layout().setFlexGrow(1.f);
 
     visualizer_frame_container->layout().setFlexGrow(0.5f);
+    visualizer_frame_container->layout().setPadding(visage::Dimension::logicalPixels(10));
     parameter_frame_container->layout().setFlexGrow(0.5f);
     visualizer_frame_container->layout().setDimensions(visage::Dimension::viewMaxPercent(100), visage::Dimension::viewMinPercent(50));
     parameter_frame_container->layout().setDimensions(visage::Dimension::viewMaxPercent(100), visage::Dimension::viewMinPercent(50));
@@ -46,9 +50,13 @@ PluginUIFrame::PluginUIFrame(DiffusorXAudioProcessor& p) : audio_processor(p) {
         canvas.fill(0, 0, f->width(), f->height());
     };
     
-    parameter_frame_container->onDraw() = [f = parameter_frame_container.get()](visage::Canvas& canvas){
+
+    parameter_frame_container->onDraw() = [f = parameter_frame_container.get(), this](visage::Canvas& canvas){
         canvas.setColor(0xffeeeeee);
         canvas.fill(0, 0, f->width(), f->height());
+        canvas.setColor(0xffffffff);
+        //canvas.shader(&knob_background_shader, 0.f, -f->width() / 2.f, f->width(), f->width());
+
     };
     // main_knobs_container->onDraw() = [f = main_knobs_container.get()](visage::Canvas& canvas){
     //     canvas.setColor(0xffff0000);
