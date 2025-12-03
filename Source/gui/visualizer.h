@@ -2,6 +2,24 @@
 #include "visage_ui/frame.h"
 #include "PluginProcessor.h"
 
+class OutputAnalyzerThread : public juce::Thread{
+public:
+    OutputAnalyzerThread(DiffusorXAudioProcessor& processor) : juce::Thread("OutputAnalyzerThread"), audio_processor(processor){
+        output_analyzer = std::make_unique<DiffusorXOutputAnalyzer>(2048 * 16, 2048 * 16, audio_processor.getAPVTS());
+    }
+    ~OutputAnalyzerThread() override{
+        stopThread(4000);
+    }
+
+    DiffusorXOutputAnalyzer* getAnalyzer() {return output_analyzer.get();}
+
+    void run() override;
+
+private:
+    std::unique_ptr<DiffusorXOutputAnalyzer> output_analyzer;
+    DiffusorXAudioProcessor& audio_processor;
+};
+
 class VisualizerFrame : public visage::Frame {
 public:
     VisualizerFrame(DiffusorXAudioProcessor& processor);
@@ -12,15 +30,24 @@ public:
 private:
     visage::GraphData freq_graph_data;
     visage::GraphData allpass_graph_data;
+    visage::GraphData freq_response_graph_data; // Frequency response of plugin output 
+    visage::GraphData prev_freq_response_graph_data;
     double* temp_allpass_graph_data = nullptr;
     DiffusorXAudioProcessor& audio_processor;
+    OutputAnalyzerThread output_analyzer_thread;
     float max_magnitude;
     double max_val;
     double min_val;
 
+    float last_frequency_cutoff;
+    float last_resonance;
+    int freq_response_calc_interval;
+    int freq_response_calc_tick;
+
     void calculateFreqGraphData();
     void calculateAllpassGraphData();
     void calculateGroupDelayData();
+    void calculateFrequencyResponseGraphData();
 
     float linearToLogFrequency(float normalizedValue, float minFreq, float maxFreq)
     {

@@ -12,7 +12,18 @@ FreqAnalyzer::FreqAnalyzer(int bufferSize)
 
 FreqAnalyzer::~FreqAnalyzer()
 {
-    delete[] input_buffer;
+    if(input_buffer){
+        delete[] input_buffer;
+    }
+
+    if(output_buffer){
+        delete[] output_buffer;
+    }
+
+    if(fft_output){
+        delete[] fft_output;
+    }
+
     if(fft_cfg) {
         kiss_fft_free(fft_cfg);
     }

@@ -25,6 +25,10 @@ DiffusorXAudioProcessor::DiffusorXAudioProcessor()
 {
     freq_analyzer = new FreqAnalyzer(2048);
     mono_buffer = nullptr;
+
+    // Init audio processors
+    audio_processors.push_back(std::make_unique<DiffusorXMonoAudioProcessor>(apvts));
+    audio_processors.push_back(std::make_unique<DiffusorXMonoAudioProcessor>(apvts));
 }
 
 juce::AudioProcessorValueTreeState::ParameterLayout DiffusorXAudioProcessor::createParameterLayout()
@@ -61,8 +65,8 @@ juce::AudioProcessorValueTreeState::ParameterLayout DiffusorXAudioProcessor::cre
     layout.add(std::make_unique<juce::AudioParameterInt>(
         "diffuse_stages",
         "Diffuse Stages",
-        1,                            // min
-        100,                          // max
+        0,                            // min
+        32,                          // max
         10                            // default value
     ));
     
@@ -147,14 +151,16 @@ void DiffusorXAudioProcessor::changeProgramName (int index, const juce::String& 
 //==============================================================================
 void DiffusorXAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
 {
-    // Use this method as the place to do any pre-playback
-    // initialisation that you need..
     if(mono_buffer != nullptr)
     {
         delete[] mono_buffer;
     }
 
     mono_buffer = new float[samplesPerBlock];
+
+    for(auto& p : audio_processors){
+        p->prepareToPlay(sampleRate, samplesPerBlock);
+    }
 }
 
 void DiffusorXAudioProcessor::releaseResources()
@@ -204,12 +210,6 @@ void DiffusorXAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, ju
     for (auto i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
         buffer.clear (i, 0, buffer.getNumSamples());
 
-    // This is the place where you'd normally do the guts of your plugin's
-    // audio processing...
-    // Make sure to reset the state if your inner loop is processing
-    // the samples and the outer loop is handling the channels.
-    // Alternatively, you can process the samples with the channels
-    // interleaved by keeping the same state.
     float mono_scale = 1.f / static_cast<float> (totalNumInputChannels);
     memset(mono_buffer, 0, sizeof(float) * buffer.getNumSamples());
     for (int channel = 0; channel < totalNumInputChannels; ++channel){
@@ -223,13 +223,12 @@ void DiffusorXAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, ju
     // Process the mono buffer with the frequency analyzer
     freq_analyzer->processBlock(mono_buffer, buffer.getNumSamples());
 
+    auto stereoBlock = juce::dsp::AudioBlock<float>(buffer);
 
     for (int channel = 0; channel < totalNumInputChannels; ++channel)
     {
-        auto* channelData = buffer.getWritePointer (channel);
-
-
-        // ..do something to the data...
+        auto monoBlock = stereoBlock.getSingleChannelBlock(channel);
+        audio_processors[channel]->processBlock(monoBlock);
     }
 }
 

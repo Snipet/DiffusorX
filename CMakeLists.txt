@@ -51,6 +51,7 @@ include_directories(
 
 file(GLOB_RECURSE EXAMPLE_SHADERS shaders/[vf]s_*.sc)
 file(GLOB_RECURSE FONT_TTF_FILES fonts/*.ttf)
+file(GLOB_RECURSE ICON_FILES icons/*.svg)
 
 # Print all shader files to be embedded
 message(STATUS "Embedding shader files:")
@@ -63,6 +64,7 @@ add_definitions(-w)
 add_compile_definitions(SHADERS_FOLDER=\"${CMAKE_CURRENT_SOURCE_DIR}/shaders\")
 visage_embed_shaders(EmbeddedShaderResources "plugin_shaders.h" "resources::shaders" "${EXAMPLE_SHADERS}")
 add_embedded_resources(EmbeddedFontResources "plugin_fonts.h" "resources::fonts" "${FONT_TTF_FILES}")
+add_embedded_resources(EmbeddedIconResources "plugin_icons.h" "resources::icons" "${ICON_FILES}")
 
 # If you are building a VST2 or AAX plugin, CMake needs to be told where to find these SDKs on your
 # system. This setup should be done before calling `juce_add_plugin`.
@@ -115,6 +117,9 @@ target_sources(DiffusorX
         Source/gui/plugin.cpp
         Source/gui/knob_container.cpp
         Source/dsp/freq_analyzer.cpp
+        Source/dsp/audio_processor.cpp
+        Source/dsp/allpass.cpp
+        Source/dsp/output_analyzer.cpp
         )
 
 # `target_compile_definitions` adds some preprocessor definitions to our target. In a Projucer
@@ -150,11 +155,13 @@ target_link_libraries(DiffusorX
     PRIVATE
         # AudioPluginData           # If we'd created a binary data target, we'd link to it here
         juce::juce_audio_utils
+        juce::juce_dsp
         visage
         kissfft
         nlohmann_json::nlohmann_json
         EmbeddedShaderResources
         EmbeddedFontResources
+        EmbeddedIconResources
 
     PUBLIC
         juce::juce_recommended_config_flags

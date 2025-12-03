@@ -17,6 +17,7 @@ private:
     // Container frames
     std::unique_ptr<visage::Frame> visualizer_frame_container;
     std::unique_ptr<visage::Frame> parameter_frame_container;
+    std::unique_ptr<visage::Frame> header_frame_container;
     std::unique_ptr<visage::Frame> main_knobs_container;
 
     // Content frames

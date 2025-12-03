@@ -10,6 +10,8 @@
 
 #include <JuceHeader.h>
 #include "dsp/freq_analyzer.h"
+#include "dsp/audio_processor.h"
+#include "dsp/output_analyzer.h"
 
 //==============================================================================
 /**
@@ -62,6 +64,7 @@ private:
     juce::AudioProcessorValueTreeState apvts;
     FreqAnalyzer* freq_analyzer = nullptr;
     float* mono_buffer = nullptr;
+    std::vector<std::unique_ptr<DiffusorXMonoAudioProcessor>> audio_processors;
     static juce::AudioProcessorValueTreeState::ParameterLayout createParameterLayout();
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (DiffusorXAudioProcessor)

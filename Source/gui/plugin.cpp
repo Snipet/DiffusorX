@@ -1,5 +1,6 @@
 #include "plugin.h"
 #include "embedded/plugin_shaders.h"
+#include "embedded/plugin_icons.h"
 
 PluginUIFrame::PluginUIFrame(DiffusorXAudioProcessor& p) : audio_processor(p),
                 knob_background_shader(resources::shaders::vs_shader_quad, resources::shaders::fs_knobs_background, visage::BlendMode::Alpha)
@@ -7,6 +8,7 @@ PluginUIFrame::PluginUIFrame(DiffusorXAudioProcessor& p) : audio_processor(p),
     visualizer_frame_ = std::make_unique<VisualizerFrame>(audio_processor);
     visualizer_frame_container = std::make_unique<visage::Frame>();
     parameter_frame_container = std::make_unique<visage::Frame>();
+    header_frame_container = std::make_unique<visage::Frame>();
     main_knobs_container = std::make_unique<visage::Frame>();
     diffuse_freq_knob = std::make_unique<KnobContainer<juce::AudioParameterFloat>>(audio_processor.getAPVTS(), "frequency", 95);
     diffuse_stages_knob = std::make_unique<KnobContainer<juce::AudioParameterInt>>(audio_processor.getAPVTS(), "diffuse_stages", 110);
@@ -20,10 +22,12 @@ PluginUIFrame::PluginUIFrame(DiffusorXAudioProcessor& p) : audio_processor(p),
     //this->layout().setFlexGrow(1.f);
 
     visualizer_frame_container->layout().setFlexGrow(0.5f);
-    visualizer_frame_container->layout().setPadding(visage::Dimension::logicalPixels(10));
+    visualizer_frame_container->layout().setPaddingTop(visage::Dimension::logicalPixels(10));
+    visualizer_frame_container->layout().setPaddingBottom(visage::Dimension::logicalPixels(10));
     parameter_frame_container->layout().setFlexGrow(0.5f);
-    visualizer_frame_container->layout().setDimensions(visage::Dimension::viewMaxPercent(100), visage::Dimension::viewMinPercent(50));
-    parameter_frame_container->layout().setDimensions(visage::Dimension::viewMaxPercent(100), visage::Dimension::viewMinPercent(50));
+    visualizer_frame_container->layout().setDimensions(visage::Dimension::viewMaxPercent(100), visage::Dimension::logicalPixels(50));
+    parameter_frame_container->layout().setDimensions(visage::Dimension::viewMaxPercent(100), visage::Dimension::logicalPixels(50));
+    header_frame_container->layout().setDimensions(visage::Dimension::viewMaxPercent(100), visage::Dimension::logicalPixels(30));
     main_knobs_container->layout().setDimensions(visage::Dimension::viewMaxPercent(60), visage::Dimension::heightPercent(100));
     main_knobs_container->layout().setFlex(true);
     main_knobs_container->layout().setFlexRows(false);
@@ -58,6 +62,14 @@ PluginUIFrame::PluginUIFrame(DiffusorXAudioProcessor& p) : audio_processor(p),
         //canvas.shader(&knob_background_shader, 0.f, -f->width() / 2.f, f->width(), f->width());
 
     };
+
+    header_frame_container->onDraw() = [f = header_frame_container.get(), this](visage::Canvas& canvas){
+        canvas.setColor(0xff222222);
+        canvas.fill(0, 0, f->width(), f->height());
+        canvas.setColor(0xddeeeeee);
+        canvas.svg(resources::icons::logo_svg, -164.f, 8.f, f->width(), f->height() - 16.f);
+
+    };
     // main_knobs_container->onDraw() = [f = main_knobs_container.get()](visage::Canvas& canvas){
     //     canvas.setColor(0xffff0000);
     //     canvas.fill(0, 0, f->width(), f->height());
@@ -71,6 +83,7 @@ PluginUIFrame::PluginUIFrame(DiffusorXAudioProcessor& p) : audio_processor(p),
 
     parameter_frame_container->addChild(main_knobs_container.get());
 
+    addChild(header_frame_container.get());
     addChild(visualizer_frame_container.get());
     addChild(parameter_frame_container.get());
 }

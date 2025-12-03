@@ -3,21 +3,45 @@
 #include <complex>
 #include "embedded/plugin_fonts.h"
 
-VisualizerFrame::VisualizerFrame(DiffusorXAudioProcessor& processor) : audio_processor(processor) {
+
+void OutputAnalyzerThread::run(){
+    while(!threadShouldExit()){
+        output_analyzer->generateMagnitudeSpectrum();
+        if(threadShouldExit()){
+            break;
+        }
+
+        //wait(50);
+    }
+}
+
+
+VisualizerFrame::VisualizerFrame(DiffusorXAudioProcessor& processor) : audio_processor(processor), output_analyzer_thread(processor) {
     layout().setFlex(true);
     layout().setMargin(visage::Dimension::logicalPixels(5));
     freq_graph_data.setNumPoints(512);
     allpass_graph_data.setNumPoints(512);
+    freq_response_graph_data.setNumPoints(512);
+    prev_freq_response_graph_data.setNumPoints(512);
     temp_allpass_graph_data = new double[allpass_graph_data.numPoints()];
     freq_graph_data.clear();
     allpass_graph_data.clear();
     for(int i = 0; i < freq_graph_data.numPoints(); ++i) {
         freq_graph_data[i] = std::sin(static_cast<double>(i) * 0.1f) * 0.5f + 0.5f;
     }
+
+    freq_response_calc_interval = 30; // 30 frames
+    freq_response_calc_tick = 0;
+
+
+    last_frequency_cutoff = -1.f;
+    last_resonance = -1.f;
+    //output_analyzer_thread.startThread();
 }
 
 VisualizerFrame::~VisualizerFrame() {
     delete[] temp_allpass_graph_data;
+    //output_analyzer_thread.stopThread(4000);
 }
 
 void VisualizerFrame::draw(visage::Canvas& canvas) {
@@ -30,19 +54,30 @@ void VisualizerFrame::draw(visage::Canvas& canvas) {
                                                       visage::Point(0.f, static_cast<double>(this->height())));
     canvas.setColor(graph_brush);
     //canvas.graphLine(graph_data, 0.f, 0.f, this->width(), this->height(), 4.f);
-    canvas.graphFill(freq_graph_data, 0.f, 0.f, this->width(), this->height(), height());
+
+    const float graph_start_y = 7.f;
+    const float graph_height = this->height() - graph_start_y;
+    canvas.graphFill(freq_graph_data, 0.f, graph_start_y, this->width(), graph_height, graph_height);
 
     canvas.setColor(0xffffffff);
-    canvas.graphLine(freq_graph_data, 0.f, 0.f, this->width(), this->height(), 2.f);
+    canvas.graphLine(freq_graph_data, 0.f, graph_start_y, this->width(), graph_height, 2.f);
 
     calculateAllpassGraphData();
     calculateGroupDelayData();
+    //calculateFrequencyResponseGraphData();
 
-    canvas.setColor(0x44ffffff);
-    canvas.graphFill(allpass_graph_data, 0.f, 0.f, this->width(), this->height(), height());
+    canvas.setColor(0x4421aaff);
+    canvas.graphFill(allpass_graph_data, 0.f, graph_start_y, this->width(), graph_height, graph_height);
 
-    canvas.setColor(0xffffffff);
-    canvas.graphLine(allpass_graph_data, 0.f, 0.f, this->width(), this->height(), 1.f);
+    canvas.setColor(0xff21aaff);
+    canvas.graphLine(allpass_graph_data, 0.f, graph_start_y, this->width(), graph_height, 1.f);
+
+    // // Frequency response
+    // canvas.setColor(0x4444ff44);
+    // canvas.graphFill(freq_response_graph_data, 0.f, 0.f, this->width(), this->height(), height());
+
+    // canvas.setColor(0xff44ff44);
+    // canvas.graphLine(freq_response_graph_data, 0.f, 0.f, this->width(), this->height(), 1.f);
 
     // visage::String min_text = visage::String("Min: ") + visage::String(min_val, 2);
     // visage::String max_text = visage::String("Max: ") + visage::String(max_val, 2);
@@ -61,23 +96,83 @@ void VisualizerFrame::calculateFreqGraphData() {
     int fft_size = audio_processor.getFreqAnalyzer()->getBufferSize();
     int sample_rate = audio_processor.getSampleRate();
     int num_points = freq_graph_data.numPoints();
+    int max_bin = fft_size / 2 - 1;
+
     for(int i = 0; i < num_points; ++i) {
         float norm_value = static_cast<float>(i) / static_cast<float>(num_points - 1);
         float freq = linearToLogFrequency(norm_value, 20.f, static_cast<float>(sample_rate) / 2.f);
         float bin = getBinForFrequency(freq, sample_rate, fft_size);
-        int bin_index_lower = static_cast<int>(std::floor(bin));
-        int bin_index_upper = bin_index_lower + 1;
-        if(bin_index_upper >= fft_size / 2){
-            bin_index_upper = fft_size / 2 - 1;
-        }
-        float fraction = bin - static_cast<float>(bin_index_lower);
+        int bin_index = static_cast<int>(std::floor(bin));
+        float fraction = bin - static_cast<float>(bin_index);
+
         float magnitude = 0.f;
-        if(bin_index_lower >= 0 && bin_index_lower < fft_size / 2) {
-            float mag_lower = freq_data[bin_index_lower];
-            float mag_upper = freq_data[bin_index_upper];
-            magnitude = std::abs(mag_lower + fraction * (mag_upper - mag_lower));
+        if(bin_index >= 0 && bin_index < fft_size / 2) {
+            // Cubic Catmull-Rom interpolation using 4 control points
+            // Get the 4 control points: P0, P1, P2, P3
+            // We interpolate between P1 and P2
+            int idx0 = std::max(0, bin_index - 1);
+            int idx1 = bin_index;
+            int idx2 = std::min(max_bin, bin_index + 1);
+            int idx3 = std::min(max_bin, bin_index + 2);
+
+            float P0 = freq_data[idx0];
+            float P1 = freq_data[idx1];
+            float P2 = freq_data[idx2];
+            float P3 = freq_data[idx3];
+
+            // Catmull-Rom spline formula
+            float t = fraction;
+            float t2 = t * t;
+            float t3 = t2 * t;
+
+            magnitude = 0.5f * (
+                2.0f * P1 +
+                (-P0 + P2) * t +
+                (2.0f * P0 - 5.0f * P1 + 4.0f * P2 - P3) * t2 +
+                (-P0 + 3.0f * P1 - 3.0f * P2 + P3) * t3
+            );
+
+            magnitude = std::abs(magnitude);
         }
         freq_graph_data[i] = 1.f - magnitude;
+    }
+}
+
+void VisualizerFrame::calculateFrequencyResponseGraphData() {
+    double freq_param = audio_processor.getAPVTS().getRawParameterValue("frequency")->load();
+    double reso_param = std::pow(audio_processor.getAPVTS().getRawParameterValue("resonance")->load(), 2) * 2.5f + 0.3;
+    if((last_frequency_cutoff != freq_param || last_resonance != reso_param || true)) {
+
+        // Copy current freq response graph data to prev freq response graph data
+        for(int i = 0; i < freq_response_graph_data.numPoints(); ++i){
+            prev_freq_response_graph_data[i] = freq_response_graph_data[i];
+        }
+
+        // Recalculate the freq response graph 
+        last_frequency_cutoff = freq_param;
+        last_resonance = reso_param;
+        float* freq_data = output_analyzer_thread.getAnalyzer()->getMagnitudeSpectrum();
+        int fft_size = output_analyzer_thread.getAnalyzer()->getFFTSize();
+        int sample_rate = audio_processor.getSampleRate();
+        int num_points = freq_response_graph_data.numPoints();
+        for(int i = 0; i < num_points; ++i) {
+            float norm_value = static_cast<float>(i) / static_cast<float>(num_points - 1);
+            float freq = linearToLogFrequency(norm_value, 20.f, static_cast<float>(sample_rate) / 2.f);
+            float bin = getBinForFrequency(freq, sample_rate, fft_size);
+            int bin_index_lower = static_cast<int>(std::floor(bin));
+            int bin_index_upper = bin_index_lower + 1;
+            if(bin_index_upper >= fft_size / 2){
+                bin_index_upper = fft_size / 2 - 1;
+            }
+            float fraction = bin - static_cast<float>(bin_index_lower);
+            float magnitude = 0.f;
+            if(bin_index_lower >= 0 && bin_index_lower < fft_size / 2) {
+                float mag_lower = freq_data[bin_index_lower];
+                float mag_upper = freq_data[bin_index_upper];
+                magnitude = std::abs(mag_lower + fraction * (mag_upper - mag_lower));
+            }
+            freq_response_graph_data[i] = 1.f - magnitude;
+        }
     }
 }
 
