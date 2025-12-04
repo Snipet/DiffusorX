@@ -6,6 +6,7 @@
 
 #define DIFFUSORX_OVERSAMPLING 2
 #define DIFFUSORX_JUCE_OVERSAMPLING_PARAM 0
+#define DIFFUSORX_MAX_STAGES 64
 
 class DiffusorXMonoAudioProcessor {
 public:
@@ -24,6 +25,7 @@ private:
     std::vector<AllpassFilter*> allpass_filters;
     int active_stages;
     float cutoff_hz;
+    float cutoff_hz_state;
     float resonance;
     int max_n_frames;
     float* mono_buffer;

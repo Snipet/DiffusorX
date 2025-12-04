@@ -75,4 +75,15 @@ private:
         
         return binIndex;
     }
+
+    float amplitudeToDb(float amplitude) {
+        if (amplitude <= 0.0f) {
+            amplitude = 0.00001;
+        }
+        
+        float db = 20.0f * std::log10(amplitude);
+        //db = std::max(-60.f, db);
+        
+        return db;
+    }
 };

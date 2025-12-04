@@ -19,7 +19,10 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 # `project()` command. `project()` sets up some helpful variables that describe source/binary
 # directories, and the current project version. This is a standard CMake command.
 
-project(DIFFUSORX VERSION 0.0.1)
+set(DIFFUSORX_VERSION 0.5.0)
+set(DIFFUSORX_VERSION_STRING "${DIFFUSORX_VERSION}")
+
+project(DIFFUSORX VERSION ${DIFFUSORX_VERSION})
 
 # If you've installed JUCE somehow (via a package manager, or directly using the CMake install
 # target), you'll need to tell this project that it depends on the installed copy of JUCE. If you've
@@ -79,7 +82,7 @@ add_embedded_resources(EmbeddedIconResources "plugin_icons.h" "resources::icons"
 # Check the readme at `docs/CMake API.md` in the JUCE repo for the full list.
 
 juce_add_plugin(DiffusorX
-    VERSION 0.0.1                              # Set this if the plugin version is different to the project version
+    VERSION ${DIFFUSORX_VERSION}                              # Set this if the plugin version is different to the project version
     # ICON_BIG ...                              # ICON_* arguments specify a path to an image file to use as an icon for the Standalone
     # ICON_SMALL ...
     COMPANY_NAME SeanFunk                          # Specify the name of the plugin's author
@@ -120,7 +123,9 @@ target_sources(DiffusorX
         Source/dsp/audio_processor.cpp
         Source/dsp/allpass.cpp
         Source/dsp/output_analyzer.cpp
+        Source/gui/about_popup.cpp
         )
+
 
 # `target_compile_definitions` adds some preprocessor definitions to our target. In a Projucer
 # project, these might be passed in the 'Preprocessor Definitions' field. JUCE modules also make use
@@ -134,7 +139,9 @@ target_compile_definitions(DiffusorX
         # JUCE_WEB_BROWSER and JUCE_USE_CURL would be on by default, but you might not need them.
         JUCE_WEB_BROWSER=0  # If you remove this, add `NEEDS_WEB_BROWSER TRUE` to the `juce_add_plugin` call
         JUCE_USE_CURL=0     # If you remove this, add `NEEDS_CURL TRUE` to the `juce_add_plugin` call
-        JUCE_VST3_CAN_REPLACE_VST2=0)
+        JUCE_VST3_CAN_REPLACE_VST2=0
+        PVERSION=${DIFFUSORX_VERSION_STRING}
+        )
 
 # If your target needs extra binary assets, you can add them here. The first argument is the name of
 # a new static library target that will include all the binary resources. There is an optional

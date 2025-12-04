@@ -50,7 +50,7 @@ void FreqAnalyzer::processBuffer()
 
     // Perform FFT
     kiss_fftr(fft_cfg, input_buffer, fft_output);
-    const float scale = 1.0f / static_cast<float>(buffer_size) * 16.f;
+    const float scale = 1.0f / (static_cast<float>(buffer_size) / 16.f);
     for(int k = 0; k < buffer_size / 2 + 1; ++k) {
         output_buffer[k] = sqrtf(fft_output[k].r * fft_output[k].r + fft_output[k].i * fft_output[k].i) * scale;
     }

@@ -19,7 +19,7 @@ void OutputAnalyzerThread::run(){
 VisualizerFrame::VisualizerFrame(DiffusorXAudioProcessor& processor) : audio_processor(processor), output_analyzer_thread(processor) {
     layout().setFlex(true);
     layout().setMargin(visage::Dimension::logicalPixels(5));
-    freq_graph_data.setNumPoints(512);
+    freq_graph_data.setNumPoints(512 * 2);
     allpass_graph_data.setNumPoints(512);
     freq_response_graph_data.setNumPoints(512);
     prev_freq_response_graph_data.setNumPoints(512);
@@ -134,7 +134,12 @@ void VisualizerFrame::calculateFreqGraphData() {
 
             magnitude = std::abs(magnitude);
         }
-        freq_graph_data[i] = 1.f - magnitude;
+        float db_val = amplitudeToDb(magnitude) + 60.f;
+        if(db_val <= 0.f){
+            freq_graph_data[i] = 1.f;
+        }else{
+            freq_graph_data[i] = 1.f - (db_val / 60.f);
+        }
     }
 }
 

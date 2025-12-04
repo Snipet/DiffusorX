@@ -38,10 +38,10 @@ private:
         VisageHostComponent(DiffusorXAudioProcessor& p) : audio_processor(p) {
             setOpaque(true);
             m_flogger = juce::FileLogger::createDefaultAppLogger("DiffusorXLogs", "DiffusorXLog.txt", "DiffusorX Log Started");
-            // Add plugin frame 
         }
         ~VisageHostComponent() override {
             // Shut down visage
+            delete m_flogger;
         }
 
         void paint(juce::Graphics& g) override {
@@ -109,7 +109,7 @@ private:
     private:
         std::unique_ptr<visage::ApplicationWindow> app_;
         std::unique_ptr<PluginUIFrame> plugin_frame_;
-        FileLogger* m_flogger;
+        juce::FileLogger* m_flogger;
         DiffusorXAudioProcessor& audio_processor;
 
     };
