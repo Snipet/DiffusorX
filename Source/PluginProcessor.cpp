@@ -23,7 +23,7 @@ DiffusorXAudioProcessor::DiffusorXAudioProcessor()
                        apvts(*this, nullptr, "Parameters", createParameterLayout())
 #endif
 {
-    freq_analyzer = new FreqAnalyzer(2048 * 2);
+    freq_analyzer = new FreqAnalyzer(2048);
     mono_buffer = nullptr;
 
     // Init audio processors

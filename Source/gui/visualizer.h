@@ -64,6 +64,19 @@ private:
         return std::exp(logFreq);
     }
 
+    float logFrequencyToLinear(float frequency, float minFreq, float maxFreq){
+        // Clamp frequency to [minFreq, maxFreq] range for safety
+        frequency = std::max(minFreq, std::min(maxFreq, frequency));
+        
+        float logMin = std::log(minFreq);
+        float logMax = std::log(maxFreq);
+        float logFreq = std::log(frequency);
+        
+        float normalizedValue = (logFreq - logMin) / (logMax - logMin);
+        
+        return normalizedValue;
+    }
+
     float getBinForFrequency(float frequency, int sampleRate, int fftSize)
     {
         // Ensure frequency is within valid range

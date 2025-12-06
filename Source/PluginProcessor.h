@@ -57,7 +57,7 @@ public:
     void setStateInformation (const void* data, int sizeInBytes) override;
     juce::AudioProcessorValueTreeState& getAPVTS() { return apvts; }
 
-    float* getFreqAnalyzerData() const {return freq_analyzer->getMagnitudeSpectrum();}
+    float* getFreqAnalyzerData() const {return freq_analyzer->getDBSpectrum();}
     FreqAnalyzer* getFreqAnalyzer() const {return freq_analyzer;}
 
 private:

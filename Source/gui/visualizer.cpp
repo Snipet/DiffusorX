@@ -86,6 +86,14 @@ void VisualizerFrame::draw(visage::Canvas& canvas) {
     // canvas.text(min_text, visage::Font(12.f, resources::fonts::Roboto_Condensed_Bold_ttf), visage::Font::Justification::kLeft, 0.f, 0.f, 100.f, 20.f);
     // canvas.text(max_text, visage::Font(12.f, resources::fonts::Roboto_Condensed_Bold_ttf), visage::Font::Justification::kLeft, 0.f, 20.f, 100.f, 20.f);
 
+    // visage::Font label_font(12.f, resources::fonts::Roboto_Condensed_Bold_ttf);
+    // float freq_100_xpos = logFrequencyToLinear(100.f, 20.f, static_cast<float>(audio_processor.getSampleRate()) / 2.f) * this->width();
+    // float freq_1k_xpos = logFrequencyToLinear(1000.f, 20.f, static_cast<float>(audio_processor.getSampleRate()) / 2.f) * this->width();
+    // float freq_10k_xpos = logFrequencyToLinear(10000.f, 20.f, static_cast<float>(audio_processor.getSampleRate()) / 2.f) * this->width();
+    // canvas.setColor(0xffffffff);
+    // canvas.text("100 Hz", label_font, visage::Font::Justification::kCenter, freq_100_xpos - 25.f, this->height() - 20.f, 50.f, 15.f);
+    // canvas.text("1 kHz", label_font, visage::Font::Justification::kCenter, freq_1k_xpos, this->height() - 20.f, 50.f, 15.f);
+    // canvas.text("10 kHz", label_font, visage::Font::Justification::kCenter, freq_10k_xpos + 25.f, this->height() - 20.f, 50.f, 15.f);
 
     // For testing purposes. Logic for redrawing the visualizer when parameters change will be added later.
     redraw();
@@ -105,7 +113,7 @@ void VisualizerFrame::calculateFreqGraphData() {
         int bin_index = static_cast<int>(std::floor(bin));
         float fraction = bin - static_cast<float>(bin_index);
 
-        float magnitude = 0.f;
+        float db_val = 0.f;
         if(bin_index >= 0 && bin_index < fft_size / 2) {
             // Cubic Catmull-Rom interpolation using 4 control points
             // Get the 4 control points: P0, P1, P2, P3
@@ -125,21 +133,23 @@ void VisualizerFrame::calculateFreqGraphData() {
             float t2 = t * t;
             float t3 = t2 * t;
 
-            magnitude = 0.5f * (
+            db_val = 0.5f * (
                 2.0f * P1 +
                 (-P0 + P2) * t +
                 (2.0f * P0 - 5.0f * P1 + 4.0f * P2 - P3) * t2 +
                 (-P0 + 3.0f * P1 - 3.0f * P2 + P3) * t3
             );
 
-            magnitude = std::abs(magnitude);
+            db_val = std::abs(db_val);
         }
-        float db_val = amplitudeToDb(magnitude) + 60.f;
-        if(db_val <= 0.f){
-            freq_graph_data[i] = 1.f;
-        }else{
-            freq_graph_data[i] = 1.f - (db_val / 60.f);
-        }
+        // float db_val = amplitudeToDb(magnitude) + 60.f;
+        // if(db_val <= 0.f){
+        //     freq_graph_data[i] = 1.f;
+        // }else{
+        //     freq_graph_data[i] = 1.f - (db_val / 60.f);
+        // }
+
+        freq_graph_data[i] = 1.f - db_val;
     }
 }
 

@@ -12,11 +12,12 @@ public:
 
     void processBlock(const float* input, int numSamples);
     int getBufferSize() const { return buffer_size; }
-    float* getMagnitudeSpectrum() const { return output_buffer; }
+    float* getDBSpectrum() const { return output_buffer; }
 
 private:
     float* input_buffer;
     float* output_buffer;
+    float* fft_input_buffer;
     kiss_fft_cpx* fft_output;
     int buffer_size;
     size_t write_index;

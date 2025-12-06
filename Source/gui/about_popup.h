@@ -25,4 +25,7 @@ private:
     std::unique_ptr<AboutTextFrame> kissfft_frame;
     std::unique_ptr<AboutTextFrame> visage_frame;
     std::unique_ptr<AboutTextFrame> juce_frame;
+    std::unique_ptr<visage::Frame> funk_audio_logo_container;
+    std::unique_ptr<visage::Frame> funk_audio_logo;
+    visage::Svg funk_audio_logo_svg;
 };

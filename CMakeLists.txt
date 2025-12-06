@@ -62,7 +62,7 @@ foreach(SHADER_FILE ${EXAMPLE_SHADERS})
     message(STATUS "  - ${SHADER_FILE}")
 endforeach()
 
-add_definitions(-w)
+#add_definitions(-w)   # Sometimes needed to see errors that exceed the terminal line limit
 
 add_compile_definitions(SHADERS_FOLDER=\"${CMAKE_CURRENT_SOURCE_DIR}/shaders\")
 visage_embed_shaders(EmbeddedShaderResources "plugin_shaders.h" "resources::shaders" "${EXAMPLE_SHADERS}")
