@@ -6,7 +6,7 @@
 template <typename T>
 class Knob : public visage::Frame {
 public:
-    Knob(juce::AudioProcessorValueTreeState& state, const juce::String& paramID);
+    Knob(juce::AudioProcessorValueTreeState& state, const juce::String& paramID, bool square = false);
     ~Knob();
     void draw(visage::Canvas& canvas) override;
     void resized() override;
@@ -27,6 +27,7 @@ private:
     bool animating;
     bool animation_growing;
     juce::AudioProcessorValueTreeState& apvts;
+    char square_mask;
     T* param = nullptr;
     juce::String paramID;
 };

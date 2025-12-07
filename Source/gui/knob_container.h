@@ -7,10 +7,11 @@
 template<typename T>
 class KnobContainer : public visage::Frame {
 public:
-    KnobContainer(juce::AudioProcessorValueTreeState& state, const juce::String& paramID, float logical_pixel_width);
+    KnobContainer(juce::AudioProcessorValueTreeState& state, const juce::String& paramID, float logical_pixel_width, bool square = false);
     ~KnobContainer();
     void draw(visage::Canvas& canvas) override;
     float getTextBottom() { return text_frame->bottom();}
+    inline float getLogicalPixelWidth() const { return logical_pixel_width; }
 
 private:
     juce::AudioProcessorValueTreeState& apvts;
@@ -18,4 +19,5 @@ private:
     juce::String paramID;
     std::unique_ptr<visage::Frame> text_frame;
     std::unique_ptr<Knob<T>> knob;
+    float logical_pixel_width;
 };

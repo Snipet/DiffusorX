@@ -6,7 +6,7 @@
 using namespace visage::dimension;
 
 template <typename T>
-Knob<T>::Knob(juce::AudioProcessorValueTreeState& state, const juce::String& paramID) : background_shader(resources::shaders::vs_shader_quad, resources::shaders::fs_knob_background2, visage::BlendMode::Alpha), apvts(state), paramID(paramID) {
+Knob<T>::Knob(juce::AudioProcessorValueTreeState& state, const juce::String& paramID, bool square) : background_shader(resources::shaders::vs_shader_quad, resources::shaders::fs_knob_background2, visage::BlendMode::Alpha), apvts(state), paramID(paramID) {
     lasty = -1.f;
     ring_animation_time = 40.f; // ms
     animating = false;
@@ -18,6 +18,8 @@ Knob<T>::Knob(juce::AudioProcessorValueTreeState& state, const juce::String& par
     jassert(param);
 
     norm_value = apvts.getRawParameterValue(paramID)->load();
+    
+    square_mask = (square) ? 0xff : 0x00;
 }
 template<typename T>
 Knob<T>::~Knob() {
@@ -30,8 +32,10 @@ void Knob<T>::draw(visage::Canvas& canvas) {
     unsigned int p_int = static_cast<unsigned int>(norm_value * 255.f);
     float animation_value = updateAnimation();
     unsigned int thickness = static_cast<unsigned int>(animation_value * 255.f);
+    char roundness = 0xff & square_mask;
     unsigned int color_input = p_int;
     color_input = color_input | (thickness << 8);
+    color_input = color_input | (static_cast<unsigned int>(roundness) << 16);
     canvas.setColor(color_input);
     canvas.shader(&background_shader, 0.f, 0.f, width(), height());
 

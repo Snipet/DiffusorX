@@ -2,8 +2,8 @@
 #include "embedded/plugin_fonts.h"
 
 template<typename T>
-KnobContainer<T>::KnobContainer(juce::AudioProcessorValueTreeState& state, const juce::String& paramID, float logical_pixel_width) : apvts(state), paramID(paramID){
-    knob = std::make_unique<Knob<T>>(state, paramID);
+KnobContainer<T>::KnobContainer(juce::AudioProcessorValueTreeState& state, const juce::String& paramID, float logical_pixel_width, bool square) : apvts(state), paramID(paramID), logical_pixel_width(logical_pixel_width){
+    knob = std::make_unique<Knob<T>>(state, paramID, square);
     knob->layout().setDimensions(visage::Dimension::logicalPixels(logical_pixel_width), visage::Dimension::logicalPixels(logical_pixel_width));
     
     text_frame = std::make_unique<visage::Frame>();

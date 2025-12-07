@@ -23,7 +23,7 @@ PluginUIFrame::PluginUIFrame(DiffusorXAudioProcessor& p) : audio_processor(p),
     about_popup_frame->layout().setMarginTop(visage::Dimension::heightPercent(10));
 
     diffuse_freq_knob = std::make_unique<KnobContainer<juce::AudioParameterFloat>>(audio_processor.getAPVTS(), "frequency", 95);
-    diffuse_stages_knob = std::make_unique<KnobContainer<juce::AudioParameterInt>>(audio_processor.getAPVTS(), "diffuse_stages", 110);
+    diffuse_stages_knob = std::make_unique<KnobContainer<juce::AudioParameterInt>>(audio_processor.getAPVTS(), "diffuse_stages", 110, true);
     diffuse_reso_knob = std::make_unique<KnobContainer<juce::AudioParameterFloat>>(audio_processor.getAPVTS(), "resonance", 95);
     //test_knob = std::make_unique<Knob>(audio_processor.getAPVTS(), "gain");
     main_plugin_frame->layout().setDimensions(visage::Dimension::widthPercent(100), visage::Dimension::heightPercent(100));
@@ -53,9 +53,9 @@ PluginUIFrame::PluginUIFrame(DiffusorXAudioProcessor& p) : audio_processor(p),
     parameter_frame_container->layout().setFlexItemAlignment(visage::Layout::ItemAlignment::Center);
 
     //test_knob->layout().setDimensions(visage::Dimension::logicalPixels(100), visage::Dimension::logicalPixels(100));
-    diffuse_freq_knob->layout().setDimensions(visage::Dimension::logicalPixels(95), visage::Dimension::logicalPixels(95 + 20));
-    diffuse_stages_knob->layout().setDimensions(visage::Dimension::logicalPixels(120), visage::Dimension::logicalPixels(120 + 20));
-    diffuse_reso_knob->layout().setDimensions(visage::Dimension::logicalPixels(95), visage::Dimension::logicalPixels(95 + 20));
+    diffuse_freq_knob->layout().setDimensions(visage::Dimension::logicalPixels(diffuse_freq_knob->getLogicalPixelWidth()), visage::Dimension::logicalPixels(diffuse_freq_knob->getLogicalPixelWidth() + 20));
+    diffuse_stages_knob->layout().setDimensions(visage::Dimension::logicalPixels(diffuse_stages_knob->getLogicalPixelWidth()), visage::Dimension::logicalPixels(diffuse_stages_knob->getLogicalPixelWidth() + 20));
+    diffuse_reso_knob->layout().setDimensions(visage::Dimension::logicalPixels(diffuse_reso_knob->getLogicalPixelWidth()), visage::Dimension::logicalPixels(diffuse_reso_knob->getLogicalPixelWidth() + 20));
 
     diffuse_freq_knob->layout().setFlexGrow(1.f);
     diffuse_stages_knob->layout().setFlexGrow(1.f);
