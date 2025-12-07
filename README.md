@@ -16,3 +16,5 @@ This plugin is essentially just a bunch of cascaded allpass filters. In my opini
 
 ## Submitting Issues
 This project is actively being worked on. If you find any bugs (especially ones not on Windows), please don't hesitate to submit an issue on GitHub. As of writing, I have not tested this plugin on MacOS or Linux (both which I plan to support).
+
+![DiffusorX image](static/screenshot.png)
