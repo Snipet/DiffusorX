@@ -1,0 +1,34 @@
+name: Windows Build
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  build:
+    runs-on: windows-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        submodules: recursive  # This handles all your git submodules
+    
+    - name: Create build directory
+      run: mkdir build
+    
+    - name: Configure CMake
+      working-directory: build
+      run: cmake ..
+    
+    - name: Build
+      working-directory: build
+      run: cmake --build . --config Release
+    
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: build-artifacts
+        path: build/Release/**/*
