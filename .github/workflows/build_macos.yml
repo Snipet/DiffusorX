@@ -16,12 +16,17 @@ jobs:
       with:
         submodules: recursive
     
+    - name: Install Xcode Command Line Tools
+      run: |
+        sudo xcode-select --install || true
+        sudo xcode-select --reset
+    
     - name: Create build directory
       run: mkdir build
     
     - name: Configure CMake
       working-directory: build
-      run: cmake ..
+      run: cmake .. -DCMAKE_OSX_ARCHITECTURES="x86_64;arm64"
     
     - name: Build
       working-directory: build
