@@ -22,7 +22,7 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 set(DIFFUSORX_VERSION 0.5.0)
 set(DIFFUSORX_VERSION_STRING "${DIFFUSORX_VERSION}")
 
-project(DIFFUSORX VERSION ${DIFFUSORX_VERSION})
+project(DIFFUSORX VERSION ${DIFFUSORX_VERSION} LANGUAGES CXX OBJCXX)
 
 # If you've installed JUCE somehow (via a package manager, or directly using the CMake install
 # target), you'll need to tell this project that it depends on the installed copy of JUCE. If you've
